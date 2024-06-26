@@ -30,7 +30,7 @@ def w2d(dat):
 	if len(dat) > 0 :
 		csv_file_path = "./myips.csv"
 		with open(csv_file_path, 'w', newline='') as file:
-			for ip in dat[:30]:
+			for ip in dat[:5]:
 				file.write(str(ip).strip() + "\n") 
 
 
