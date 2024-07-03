@@ -55,6 +55,6 @@ def extract_vless_info(vless_url):
 
 
 if __name__ == '__main__':
-	api_url = "https://alvless.comorg.us.kg/CMorg"
+	api_url = "https://alvless.comorg.us.kg/sub?host=host&uuid=uuid"
 	w2d(getAPI(api_url))
 
