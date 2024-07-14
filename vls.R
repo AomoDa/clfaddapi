@@ -39,7 +39,7 @@ getApiData <- function(xurl){
 		unlist() %>%
 		getVlessInfo() %>%
 		head(5) %>%
-		write.table(file = "my.csv",col.names = FALSE,row.names = FALSE)
+		write.table(file = "myips.csv",col.names = FALSE,row.names = FALSE)
 
 }
 
