@@ -38,7 +38,7 @@ getApiData <- function(xurl){
 		str_split("\n") %>%
 		unlist() %>%
 		getVlessInfo() %>%
-		head(5) %>%
+		head(10) %>%
 		write.table(file = "myips.csv",col.names = FALSE,row.names = FALSE,quote=FALSE)
 
 }
