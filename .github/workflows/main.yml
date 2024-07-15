@@ -19,6 +19,7 @@ jobs:
             any::RCurl 
             any::rvest
             any::stringr
+            any::pingr
 
       - name: Check out repository
         uses: actions/checkout@v3
