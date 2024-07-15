@@ -24,7 +24,7 @@ getVlessInfo <- function(txt_list){
 		info = str_extract(URLdecode(i),"vless://[^@]+@([^:]+):(\\d+).+#(.+)",group=c(1,2,3))
 		if(isselect(info[3])){
 			if(any(dom==info[1])) next()
-			if(ping_test(info[1])) next()
+			# if(ping_test(info[1])) next()
 			tmp = data.frame(ips =sprintf("%s:%s#HKG%s",info[1],info[2],ind)) 
 			rlt = rbind(rlt,tmp)
 			ind = ind + 1
