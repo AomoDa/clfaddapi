@@ -5,7 +5,8 @@ library(pingr)
 
 isselect = function(tag){
 	if(is.na(tag)) return(FALSE)
-	vls = c("HKG","HK","hkg","hk","联通","电信","移动")
+	# vls = c("HKG","HK","hkg","hk","联通","电信","移动")
+	vls = c("KHH","联通","电信","移动")
 	str_cnt = sum(str_count(tag,vls))
 	if(str_cnt>0) return(TRUE)
 	return(FALSE)	
