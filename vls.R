@@ -22,7 +22,7 @@ getVlessInfo <- function(txt_list){
 	rlt = data.frame();ind = 1;dom=c()
 	for (i in txt_list) {
 
-		info = str_extract(URLdecode(i),"vless://[^@]+@([^:]+):(\\d+).+#(.+)",group=c(1,2,3))
+		info = str_extract(URLdecode(i),".+://[^@]+@([^:]+):(\\d+).+#(.+)",group=c(1,2,3))
 		if(isselect(info[3])){
 			if(any(dom==info[1])) next()
 			# if(ping_test(info[1])) next()
@@ -52,5 +52,6 @@ getApiData <- function(xurl){
 
 
 # run
-getApiData("https://alvless.filegear-sg.me/sub?host=host&uuid=uuid")
+#getApiData("https://alvless.filegear-sg.me/sub?host=host&uuid=uuid")
+getApiData("https://altrojan.filegear-sg.me/sub?host=host&pw=uuid&path=xpath")
 
