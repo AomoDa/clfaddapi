@@ -1,7 +1,6 @@
 library(rvest)
 library(RCurl)
 library(stringr)
-library(pingr)
 
 isselect = function(tag){
 	if(is.na(tag)) return(FALSE)
@@ -12,11 +11,6 @@ isselect = function(tag){
 	return(FALSE)	
 }	
 
-ping_test <- function(ip){
-	return(all(is.na(ping(ip))))
-}
-
-
 getVlessInfo <- function(txt_list){
 
 	rlt = data.frame();ind = 1;dom=c()
@@ -25,7 +19,6 @@ getVlessInfo <- function(txt_list){
 		info = str_extract(URLdecode(i),".+://[^@]+@([^:]+):(\\d+).+#(.+)",group=c(1,2,3))
 		if(isselect(info[3])){
 			if(any(dom==info[1])) next()
-			# if(ping_test(info[1])) next()
 			tmp = data.frame(ips =sprintf("%s:%s#HKG%s",info[1],info[2],ind)) 
 			rlt = rbind(rlt,tmp)
 			ind = ind + 1
