@@ -46,5 +46,6 @@ getApiData <- function(xurl){
 
 # run
 #getApiData("https://alvless.filegear-sg.me/sub?host=host&uuid=uuid")
-getApiData("https://altrojan.comorg.us.kg/sub?host=host&pw=uuid&path=xpath")
+#getApiData("https://altrojan.comorg.us.kg/sub?host=host&pw=uuid&path=xpath")
+getApiData("https://trojan.cmliussss.net/sub?host=host&pw=uuid&path=xpath")
 
