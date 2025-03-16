@@ -25,13 +25,12 @@ getVlessInfo <- function(txt_list){
 		}
 	}
 	return(rlt)
-
 }
 
-
-getApiData <- function(xurl){
-
-	read_html(xurl) %>% 
+getApiData <- function(){
+	
+	readLines("xurl") %>%	
+		read_html() %>% 
 		html_text2() %>% 
 		base64Decode() %>%
 		str_split("\n") %>%
@@ -39,12 +38,10 @@ getApiData <- function(xurl){
 		getVlessInfo() %>%
 		head(10) %>%
 		write.table(file = "myips.csv",col.names = FALSE,row.names = FALSE,quote=FALSE)
-
 }
-
-
 # run
+getApiData()
 #getApiData("https://alvless.filegear-sg.me/sub?host=host&uuid=uuid")
 #getApiData("https://altrojan.comorg.us.kg/sub?host=host&pw=uuid&path=xpath")
-getApiData("https://trojan.cmliussss.net/sub?host=host&pw=uuid&path=xpath")
+#getApiData("https://trojan.cmliussss.net/sub?host=host&pw=uuid&path=xpath")
 
