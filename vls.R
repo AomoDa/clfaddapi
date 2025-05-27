@@ -39,15 +39,15 @@ getApiData <- function(){
 		head(10) %>%
 		write.table(file = "myips.csv",col.names = FALSE,row.names = FALSE,quote=FALSE)
 
-	readLines("xurl2") %>%	
-		read_html() %>% 
-		html_text2() %>% 
-		base64Decode() %>%
-		str_split("\n") %>%
-		unlist() %>%
-		getVlessInfo("CM") %>%
-		head(10) %>%
-		write.table(file = "myips.csv",col.names = FALSE,row.names = FALSE,quote=FALSE,append=TRUE)
+	# readLines("xurl2") %>%	
+	# 	read_html() %>% 
+	# 	html_text2() %>% 
+	# 	base64Decode() %>%
+	# 	str_split("\n") %>%
+	# 	unlist() %>%
+	# 	getVlessInfo("CM") %>%
+	# 	head(10) %>%
+	# 	write.table(file = "myips.csv",col.names = FALSE,row.names = FALSE,quote=FALSE,append=TRUE)
 }
 # run
 getApiData()
