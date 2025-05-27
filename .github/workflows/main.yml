@@ -30,11 +30,17 @@ jobs:
           git config --local user.name "github-actions[bot]"
 
       - name: Get XURL
-        id: get-accounts
         run: |
           echo "$XURL" > xurl
         env:
           XURL: ${{ secrets.XURL }}
+
+
+      - name: Get XURL
+        run: |
+          echo "$XURL2" > xurl2
+        env:
+          XURL2: ${{ secrets.XURL2 }}
 
       - name: Import data
         run: Rscript -e 'source("vls.R")'
