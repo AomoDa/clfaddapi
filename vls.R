@@ -4,7 +4,7 @@ library(stringr)
 
 isselect = function(tag){
 	if(is.na(tag)) return(FALSE)
-	vls = c("HKG","HK","hkg","hk")
+	vls = c("HKG","HK","hkg","hk","TW","tw")
 	str_cnt = sum(str_count(tag,vls))
 	if(str_cnt>0) return(TRUE)
 	return(FALSE)	
