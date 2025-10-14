@@ -1,7 +1,5 @@
 
 # 个性化文件
-
-DOMAIN-SUFFIX,cloudflare.com
 DOMAIN-SUFFIX,namecheap.com
 DOMAIN-SUFFIX,openwrt.org
 DOMAIN-SUFFIX,x.com
