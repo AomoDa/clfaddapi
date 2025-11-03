@@ -44,10 +44,10 @@ jobs:
       - name: Write secrets to files
         run: |
           echo "${XURL}" > xurl
-          echo "${XURL2}" > xurl2
+          # echo "${XURL2}" > xurl2
         env:
           XURL: ${{ secrets.XURL }}
-          XURL2: ${{ secrets.XURL2 }}
+          # XURL2: ${{ secrets.XURL2 }}
 
       - name: Import data
         run: Rscript -e 'source("vls.R")'
