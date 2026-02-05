@@ -13,7 +13,7 @@ isselect = function(tag){
 getVlessInfo <- function(txt_list,vname){
 
 	rlt = data.frame();ind = 1;dom=c()
-	for (i in txt_list) {
+	for (i in txt_list[-1]) {
 
 		info = str_extract(URLdecode(i),".+://[^@]+@([^:]+):(\\d+).+#(.+)",group=c(1,2,3))
 		if(isselect(info[3])){
