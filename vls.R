@@ -29,7 +29,7 @@ getVlessInfo <- function(txt_list,vname){
 
 getApiData <- function(){
 
-	write.table(x=data.frame(x='cf.090227.xyz:443#CF'),file = "myips.csv",col.names = FALSE,row.names = FALSE,quote=FALSE)	
+	write.table(x=data.frame(x=c("cf.090227.xyz:443#CF","45.121.138.23:26688#TC7","cdns.doon.eu.org:443#TE1","www.visa.cn:443#VISA","mfa.gov.ua:443#MFA","www.shopify.com:443#SHOP","store.ubi.com:443#STORE","staticdelivery.nexusmods.com:443#NEX")),file = "myips.csv",col.names = FALSE,row.names = FALSE,quote=FALSE)	
 	readLines("xurl2") %>%	
 		read_html() %>% 
 		html_text2() %>% 
