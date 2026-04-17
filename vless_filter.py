@@ -1,9 +1,23 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-import requests, base64, re, socket, csv, time
+import requests, base64, re, socket, csv, time, os
 from concurrent.futures import ThreadPoolExecutor
 from urllib.parse import urlparse, parse_qs, unquote
 from collections import defaultdict
+from pathlib import Path
+
+# 从 .env 文件加载配置
+env_path = Path(__file__).parent / ".env"
+if env_path.exists():
+    with open(env_path, 'r') as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith('#') and '=' in line:
+                key, value = line.split('=', 1)
+                os.environ.setdefault(key, value)
+
+# 订阅地址从环境变量读取
+SUB_URL = os.environ.get("SUB_URL", "https://sub.995677.xyz/sub")
 
 ASIA_NORTH_AMERICA = {
     'CN': 'chn', 'HK': 'hkg', 'TW': 'twn', 'JP': 'jpn', 'KR': 'kor',
@@ -142,9 +156,8 @@ def save_to_csv(results, filename='cfbest.csv'):
     print(f"\n已保存到 {filename} (共 {len(fixed) + len(results)} 个节点)")
 
 def main():
-    url = "https://sub.995677.xyz/sub"
-    print("获取 vless 订阅...")
-    links = get_vless_links(url)
+    print(f"获取 vless 订阅 ({SUB_URL})...")
+    links = get_vless_links(SUB_URL)
     if not links:
         print("未找到 vless 链接")
         return
