@@ -50,15 +50,42 @@ def get_country(ip):
         pass
     return None
 
-def measure_ping(ip, port, timeout=2):
+def measure_ping(ip, port, timeout=2, rounds=3, pings_per_round=10):
+    """
+    测试节点延迟，多轮多次 ping 测试
+    - rounds: 测试轮数 (默认 3 轮)
+    - pings_per_round: 每轮 ping 次数 (默认 10 次)
+    - 如果有丢包则返回 inf
+    - 返回平均延迟 (毫秒)
+    """
     try:
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.settimeout(timeout)
-        start = time.time()
-        result = sock.connect_ex((ip, int(port)))
-        latency = (time.time() - start) * 1000
-        sock.close()
-        return latency if result == 0 else float('inf')
+        all_latencies = []
+        for round_num in range(rounds):
+            round_latencies = []
+            for i in range(pings_per_round):
+                try:
+                    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    sock.settimeout(timeout)
+                    start = time.time()
+                    result = sock.connect_ex((ip, int(port)))
+                    latency = (time.time() - start) * 1000
+                    sock.close()
+                    if result == 0:
+                        round_latencies.append(latency)
+                    else:
+                        return float('inf')  # 连接失败，直接返回 inf
+                except:
+                    return float('inf')  # 异常，直接返回 inf
+            
+            # 每轮检查丢包率
+            if len(round_latencies) < pings_per_round:
+                return float('inf')  # 有丢包，抛弃该节点
+            
+            all_latencies.extend(round_latencies)
+            time.sleep(0.1)  # 轮间间隔
+        
+        # 所有轮次都无丢包，返回平均延迟
+        return sum(all_latencies) / len(all_latencies)
     except:
         return float('inf')
 
@@ -82,21 +109,25 @@ def filter_nodes(vless_links):
 
     results = []
     for country, ns in by_country.items():
-        print(f"\n测试 {country} 的 {len(ns)} 个节点...")
+        print(f"\n测试 {country} 的 {len(ns)} 个节点 (3 轮×10 次 ping)...")
         latencies = []
         with ThreadPoolExecutor(max_workers=20) as ex:
             futures = {ex.submit(measure_ping, n['ip'], n['port']): n for n in ns}
             for f in futures:
                 n = futures[f]
                 lat = f.result()
-                latencies.append((lat, n))
-                print(f"  {n['ip']}:{n['port']} - {lat:.2f}ms")
+                if lat == float('inf'):
+                    print(f"  {n['ip']}:{n['port']} - ✗ 丢包/超时")
+                else:
+                    print(f"  {n['ip']}:{n['port']} - {lat:.2f}ms ✓")
+                    latencies.append((lat, n))
         latencies.sort(key=lambda x: x[0])
+        print(f"  有效节点：{len(latencies)} 个")
         for lat, n in latencies[:2]:
             abbr = ASIA_NORTH_AMERICA.get(country.upper(), country.lower())
             out = f"{n['ip']}:{n['port']}#{abbr}"
             results.append({'output': out, 'latency': lat})
-            print(f"选中：{out} ({lat:.2f}ms)")
+            print(f"  ✓ 选中：{out} ({lat:.2f}ms)")
     return results
 
 def save_to_csv(results, filename='cfbest.csv'):
