@@ -16,8 +16,10 @@ if env_path.exists():
                 key, value = line.split('=', 1)
                 os.environ.setdefault(key, value)
 
-# 订阅地址从环境变量读取
-SUB_URL = os.environ.get("SUB_URL", "https://sub.995677.xyz/sub")
+# 订阅地址从环境变量读取 (必须配置 .env 文件)
+SUB_URL = os.environ.get("SUB_URL")
+if not SUB_URL:
+    raise ValueError("SUB_URL 未配置！请复制 .env.example 为 .env 并设置订阅地址")
 
 ASIA_NORTH_AMERICA = {
     'CN': 'chn', 'HK': 'hkg', 'TW': 'twn', 'JP': 'jpn', 'KR': 'kor',
