@@ -189,16 +189,78 @@ def filter_nodes(vless_links):
             print(f"  ✓ 选中：{out} ({lat:.2f}ms)")
     return results
 
+def get_cf_top5_ips(result_csv='/opt/cfst/result.csv', top_n=5):
+    """
+    从 CloudflareSpeedTest 结果中获取 Top N 个最快 IP（按下载速度排序）
+    返回格式：IP:Port#name
+    """
+    cf_ips = []
+    try:
+        if not os.path.exists(result_csv):
+            print(f"⚠️  未找到 CloudflareSpeedTest 结果文件：{result_csv}")
+            return cf_ips
+        
+        with open(result_csv, 'r', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            rows = list(reader)
+        
+        print(f"  读取 CSV: {len(rows)} 行，列名：{reader.fieldnames}")
+        
+        # 按下载速度排序，跳过速度为 0 的（列名：下载速度(MB/s)，注意速度和 ( 之间没有空格）
+        valid_rows = []
+        for r in rows:
+            speed_str = r.get('下载速度(MB/s)', '0')
+            try:
+                speed = float(speed_str)
+                if speed > 0:
+                    valid_rows.append(r)
+            except:
+                pass
+        
+        print(f"  有效 IP (速度>0): {len(valid_rows)} 个")
+        
+        valid_rows.sort(key=lambda x: float(x.get('下载速度(MB/s)', 0)), reverse=True)
+        
+        # 取前 N 个
+        for i, row in enumerate(valid_rows[:top_n], 1):
+            ip = row.get('IP 地址', '')
+            speed = float(row.get('下载速度(MB/s)', 0))
+            if ip and speed > 0:
+                # 格式：IP:443#cfb1, IP:443#cfb2, ...
+                cf_ips.append(f"{ip}:443#cfb{i}")
+                print(f"  ✓ CF Top{i}: {ip}:443 ({speed} MB/s)")
+        
+        if not cf_ips:
+            print(f"⚠️  CloudflareSpeedTest 结果中无有效 IP（速度>0）")
+    except Exception as e:
+        print(f"⚠️  读取 CloudflareSpeedTest 结果失败：{e}")
+    
+    return cf_ips
+
+
 def save_to_csv(results, filename='cfbest.csv'):
+    # 获取 CloudflareSpeedTest Top 5 IP
+    print("\n加载 CloudflareSpeedTest Top 5 IP...")
+    cf_top5 = get_cf_top5_ips()
+    
+    # 固定节点
     fixed = [
         'cf.090227.xyz:443#CF', 'saas.sin.fan:443#SAAS', 'store.ubi.com:443#UBI',
         'cf.danfeng.eu.org:443#DF', 'cloudflare.seeck.cn:443#CFS',
         'cu.877774.xyz:443#CFZU', 'cucc.cloudflare.seeck.cn:443#CFSU',
     ]
+    
+    # 合并：固定节点 + CF Top5 + VLESS 优选节点
+    all_nodes = fixed + cf_top5 + [r['output'] for r in results]
+    
     with open(filename, 'w', encoding='utf-8') as f:
-        for node in fixed + [r['output'] for r in results]:
+        for node in all_nodes:
             f.write(node + '\n')
-    print(f"\n已保存到 {filename} (共 {len(fixed) + len(results)} 个节点)")
+    
+    print(f"\n已保存到 {filename} (共 {len(all_nodes)} 个节点)")
+    print(f"  • 固定节点：{len(fixed)} 个")
+    print(f"  • CF Top5: {len(cf_top5)} 个")
+    print(f"  • VLESS 优选：{len(results)} 个")
 
 def main():
     print(f"从 {len(SUB_URL_LIST)} 个订阅源获取 VLESS 节点...")
