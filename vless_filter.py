@@ -22,12 +22,14 @@ if not SUB_URL:
     raise ValueError("SUB_URL 未配置！请复制 .env.example 为 .env 并设置订阅地址")
 
 ASIA_NORTH_AMERICA = {
-    'CN': 'chn', 'HK': 'hkg', 'TW': 'twn', 'JP': 'jpn', 'KR': 'kor',
+    'HK': 'hkg', 'TW': 'twn', 'JP': 'jpn', 'KR': 'kor',
     'SG': 'sgp', 'TH': 'tha', 'VN': 'vnm', 'MY': 'mys', 'PH': 'phl',
     'ID': 'idn', 'IN': 'ind', 'PK': 'pak', 'BD': 'bgd', 'LK': 'lka',
     'KH': 'khm', 'LA': 'lao', 'MM': 'mmr', 'BN': 'brn', 'MO': 'mac',
     'US': 'usa', 'CA': 'can', 'MX': 'mex',
 }
+# 排除的国家代码
+EXCLUDED_COUNTRIES = {'CN'}
 
 def get_vless_links(url):
     try:
@@ -113,11 +115,11 @@ def filter_nodes(vless_links):
     nodes = []
     for n in parsed:
         c = get_country(n['ip'])
-        if c and c.upper() in ASIA_NORTH_AMERICA:
+        if c and c.upper() not in EXCLUDED_COUNTRIES and c.upper() in ASIA_NORTH_AMERICA:
             n['country'] = c
             nodes.append(n)
             print(f"  {n['ip']}:{n['port']} -> {c}")
-    print(f"亚洲和北美节点：{len(nodes)} 个")
+    print(f"亚洲和北美节点（已排除 CN）: {len(nodes)} 个")
 
     by_country = defaultdict(list)
     for n in nodes:
