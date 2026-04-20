@@ -17,9 +17,13 @@ if env_path.exists():
                 os.environ.setdefault(key, value)
 
 # 订阅地址从环境变量读取 (必须配置 .env 文件)
-SUB_URL = os.environ.get("SUB_URL")
-if not SUB_URL:
-    raise ValueError("SUB_URL 未配置！请复制 .env.example 为 .env 并设置订阅地址")
+# 支持多个订阅地址，用逗号分隔
+SUB_URLS = os.environ.get("SUB_URLS")
+if not SUB_URLS:
+    raise ValueError("SUB_URLS 未配置！请复制 .env.example 为 .env 并设置订阅地址（多个 URL 用逗号分隔）")
+
+# 解析多个订阅 URL
+SUB_URL_LIST = [url.strip() for url in SUB_URLS.split(',') if url.strip()]
 
 ASIA_NORTH_AMERICA = {
     'HK': 'hkg', 'TW': 'twn', 'JP': 'jpn', 'KR': 'kor',
@@ -30,6 +34,43 @@ ASIA_NORTH_AMERICA = {
 }
 # 排除的国家代码
 EXCLUDED_COUNTRIES = {'CN'}
+
+def get_vless_links_from_multiple_sources(url_list):
+    """
+    从多个订阅 URL 获取 vless 链接，合并后去重
+    """
+    all_links = []
+    seen = set()  # 用于去重 (基于 IP:Port)
+    
+    for i, url in enumerate(url_list, 1):
+        print(f"\n[{i}/{len(url_list)}] 获取订阅：{url[:50]}...")
+        try:
+            r = requests.get(url, timeout=10)
+            r.raise_for_status()
+            try:
+                links = base64.b64decode(r.text).decode('utf-8').strip().split('\n')
+            except:
+                links = r.text.strip().split('\n')
+            
+            vless_links = [l for l in links if l.startswith('vless://')]
+            print(f"  找到 {len(vless_links)} 个 vless 链接")
+            
+            # 去重：解析每个链接，检查 IP:Port 是否已存在
+            for link in vless_links:
+                parsed = parse_vless(link)
+                if parsed:
+                    key = f"{parsed['ip']}:{parsed['port']}"
+                    if key not in seen:
+                        seen.add(key)
+                        all_links.append(link)
+                    # else:
+                    #     print(f"  跳过重复节点：{key}")
+        except Exception as e:
+            print(f"  获取失败：{e}")
+    
+    print(f"\n合并去重后：{len(all_links)} 个唯一节点")
+    return all_links
+
 
 def get_vless_links(url):
     try:
@@ -160,12 +201,19 @@ def save_to_csv(results, filename='cfbest.csv'):
     print(f"\n已保存到 {filename} (共 {len(fixed) + len(results)} 个节点)")
 
 def main():
-    print(f"获取 vless 订阅 ({SUB_URL})...")
-    links = get_vless_links(SUB_URL)
+    print(f"从 {len(SUB_URL_LIST)} 个订阅源获取 VLESS 节点...")
+    print("=" * 60)
+    
+    # 从多个订阅源获取节点，合并去重
+    links = get_vless_links_from_multiple_sources(SUB_URL_LIST)
+    
     if not links:
-        print("未找到 vless 链接")
+        print("\n未找到 vless 链接")
         return
-    print(f"找到 {len(links)} 个 vless 链接\n过滤节点...")
+    
+    print(f"\n总共 {len(links)} 个唯一 vless 链接\n开始过滤节点...")
+    print("=" * 60)
+    
     results = filter_nodes(links)
     if results:
         save_to_csv(results)
