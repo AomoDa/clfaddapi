@@ -10,7 +10,7 @@ DOMAIN-SUFFIX,generativeai.google
 DOMAIN-SUFFIX,googleapis.com
 DOMAIN-SUFFIX,apis.google.com
 DOMAIN-KEYWORD,colab
+DOMAIN-KEYWORD,gemini
 DOMAIN-KEYWORD,developerprofiles
 DOMAIN-KEYWORD,generativelanguage
 DOMAIN-SUFFIX,aistudio.google.com
-DOMAIN-SUFFIX,gemini.gstatic.com
