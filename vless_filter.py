@@ -162,31 +162,32 @@ def filter_nodes(vless_links):
             print(f"  {n['ip']}:{n['port']} -> {c}")
     print(f"亚洲和北美节点（已排除 CN）: {len(nodes)} 个")
 
-    by_country = defaultdict(list)
-    for n in nodes:
-        by_country[n['country']].append(n)
-
+    # 所有地区一起测试 ping，不分组，全局排序取 top3
+    print(f"\n测试所有 {len(nodes)} 个节点的延迟 (3 轮×10 次 ping)...")
+    latencies = []
+    with ThreadPoolExecutor(max_workers=20) as ex:
+        futures = {ex.submit(measure_ping, n['ip'], n['port']): n for n in nodes}
+        for f in futures:
+            n = futures[f]
+            lat = f.result()
+            if lat == float('inf'):
+                print(f"  {n['ip']}:{n['port']} - ✗ 丢包/超时")
+            else:
+                print(f"  {n['ip']}:{n['port']} - {lat:.2f}ms ✓")
+                latencies.append((lat, n))
+    
+    # 按延迟排序，取 top3
+    latencies.sort(key=lambda x: x[0])
+    print(f"\n有效节点：{len(latencies)} 个")
+    
     results = []
-    for country, ns in by_country.items():
-        print(f"\n测试 {country} 的 {len(ns)} 个节点 (3 轮×10 次 ping)...")
-        latencies = []
-        with ThreadPoolExecutor(max_workers=20) as ex:
-            futures = {ex.submit(measure_ping, n['ip'], n['port']): n for n in ns}
-            for f in futures:
-                n = futures[f]
-                lat = f.result()
-                if lat == float('inf'):
-                    print(f"  {n['ip']}:{n['port']} - ✗ 丢包/超时")
-                else:
-                    print(f"  {n['ip']}:{n['port']} - {lat:.2f}ms ✓")
-                    latencies.append((lat, n))
-        latencies.sort(key=lambda x: x[0])
-        print(f"  有效节点：{len(latencies)} 个")
-        for lat, n in latencies[:2]:
-            abbr = ASIA_NORTH_AMERICA.get(country.upper(), country.lower())
-            out = f"{n['ip']}:{n['port']}#{abbr}"
-            results.append({'output': out, 'latency': lat})
-            print(f"  ✓ 选中：{out} ({lat:.2f}ms)")
+    for lat, n in latencies[:3]:
+        country = n['country']
+        abbr = ASIA_NORTH_AMERICA.get(country.upper(), country.lower())
+        out = f"{n['ip']}:{n['port']}#{abbr}"
+        results.append({'output': out, 'latency': lat})
+        print(f"  ✓ 选中：{out} ({lat:.2f}ms)")
+    
     return results
 
 def get_cf_top5_ips(result_csv='/opt/cfst/result.csv', top_n=5):
@@ -239,28 +240,32 @@ def get_cf_top5_ips(result_csv='/opt/cfst/result.csv', top_n=5):
 
 
 def save_to_csv(results, filename='cfbest.csv'):
-    # 获取 CloudflareSpeedTest Top 5 IP
-    print("\n加载 CloudflareSpeedTest Top 5 IP...")
-    cf_top5 = get_cf_top5_ips()
+    # 获取 CloudflareSpeedTest Top 5 IP - 取 top3
+    print("\n加载 CloudflareSpeedTest Top 3 IP...")
+    cf_top3 = get_cf_top5_ips(top_n=3)
     
-    # 固定节点
+    # 固定节点 - 取前 4 个
     fixed = [
         'cf.090227.xyz:443#CF', 'saas.sin.fan:443#SAAS', 'store.ubi.com:443#UBI',
         'cf.danfeng.eu.org:443#DF', 'cloudflare.seeck.cn:443#CFS',
         'cu.877774.xyz:443#CFZU', 'cucc.cloudflare.seeck.cn:443#CFSU',
     ]
+    fixed_nodes = fixed[:4]
     
-    # 合并：固定节点 + CF Top5 + VLESS 优选节点
-    all_nodes = fixed + cf_top5 + [r['output'] for r in results]
+    # VLESS 优选节点 - 已经是全局 top3
+    vless_nodes = [r['output'] for r in results]
+    
+    # 合并：固定节点 4 个 + CF Top3 + VLESS Top3 = 10 个
+    all_nodes = fixed_nodes + cf_top3 + vless_nodes
     
     with open(filename, 'w', encoding='utf-8') as f:
         for node in all_nodes:
             f.write(node + '\n')
     
     print(f"\n已保存到 {filename} (共 {len(all_nodes)} 个节点)")
-    print(f"  • 固定节点：{len(fixed)} 个")
-    print(f"  • CF Top5: {len(cf_top5)} 个")
-    print(f"  • VLESS 优选：{len(results)} 个")
+    print(f"  • 固定节点：{len(fixed_nodes)} 个")
+    print(f"  • CF Top3: {len(cf_top3)} 个")
+    print(f"  • VLESS Top3: {len(vless_nodes)} 个")
 
 def main():
     print(f"从 {len(SUB_URL_LIST)} 个订阅源获取 VLESS 节点...")
