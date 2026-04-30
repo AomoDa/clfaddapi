@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-import requests, base64, re, socket, csv, time, os
+import requests, base64, re, socket, time, os
 from concurrent.futures import ThreadPoolExecutor
 from urllib.parse import urlparse, parse_qs, unquote
 from collections import defaultdict
@@ -190,60 +190,7 @@ def filter_nodes(vless_links):
     
     return results
 
-def get_cf_top5_ips(result_csv='/opt/cfst/result.csv', top_n=5):
-    """
-    从 CloudflareSpeedTest 结果中获取 Top N 个最快 IP（按下载速度排序）
-    返回格式：IP:Port#name
-    """
-    cf_ips = []
-    try:
-        if not os.path.exists(result_csv):
-            print(f"⚠️  未找到 CloudflareSpeedTest 结果文件：{result_csv}")
-            return cf_ips
-        
-        with open(result_csv, 'r', encoding='utf-8') as f:
-            reader = csv.DictReader(f)
-            rows = list(reader)
-        
-        print(f"  读取 CSV: {len(rows)} 行，列名：{reader.fieldnames}")
-        
-        # 按下载速度排序，跳过速度为 0 的（列名：下载速度(MB/s)，注意速度和 ( 之间没有空格）
-        valid_rows = []
-        for r in rows:
-            speed_str = r.get('下载速度(MB/s)', '0')
-            try:
-                speed = float(speed_str)
-                if speed > 0:
-                    valid_rows.append(r)
-            except:
-                pass
-        
-        print(f"  有效 IP (速度>0): {len(valid_rows)} 个")
-        
-        valid_rows.sort(key=lambda x: float(x.get('下载速度(MB/s)', 0)), reverse=True)
-        
-        # 取前 N 个
-        for i, row in enumerate(valid_rows[:top_n], 1):
-            ip = row.get('IP 地址', '')
-            speed = float(row.get('下载速度(MB/s)', 0))
-            if ip and speed > 0:
-                # 格式：IP:443#cfb1, IP:443#cfb2, ...
-                cf_ips.append(f"{ip}:443#cfb{i}")
-                print(f"  ✓ CF Top{i}: {ip}:443 ({speed} MB/s)")
-        
-        if not cf_ips:
-            print(f"⚠️  CloudflareSpeedTest 结果中无有效 IP（速度>0）")
-    except Exception as e:
-        print(f"⚠️  读取 CloudflareSpeedTest 结果失败：{e}")
-    
-    return cf_ips
-
-
 def save_to_csv(results, filename='cfbest.csv'):
-    # 获取 CloudflareSpeedTest Top 5 IP - 取 top3
-    print("\n加载 CloudflareSpeedTest Top 3 IP...")
-    cf_top3 = get_cf_top5_ips(top_n=3)
-    
     # 固定节点 - 取前 4 个
     fixed = [
         'cf.090227.xyz:443#CF', 'saas.sin.fan:443#SAAS', 'store.ubi.com:443#UBI',
@@ -255,8 +202,8 @@ def save_to_csv(results, filename='cfbest.csv'):
     # VLESS 优选节点 - 已经是全局 top3
     vless_nodes = [r['output'] for r in results]
     
-    # 合并：固定节点 4 个 + CF Top3 + VLESS Top3 = 10 个
-    all_nodes = fixed_nodes + cf_top3 + vless_nodes
+    # 合并：固定节点 4 个 + VLESS Top3 = 7 个
+    all_nodes = fixed_nodes + vless_nodes
     
     with open(filename, 'w', encoding='utf-8') as f:
         for node in all_nodes:
@@ -264,7 +211,6 @@ def save_to_csv(results, filename='cfbest.csv'):
     
     print(f"\n已保存到 {filename} (共 {len(all_nodes)} 个节点)")
     print(f"  • 固定节点：{len(fixed_nodes)} 个")
-    print(f"  • CF Top3: {len(cf_top3)} 个")
     print(f"  • VLESS Top3: {len(vless_nodes)} 个")
 
 def main():
